@@ -16,6 +16,7 @@ if (!require('DT', quietly = T)) install.packages('DT');
 if (!require('plotly', quietly = T)) install.packages('plotly');
 if (!require('htmlwidgets', quietly = T)) install.packages('htmlwidgets');
 if (!require('ggplot2', quietly = T)) install.packages("ggplot2");
+if (!require('data.table', quietly = T)) install.packages("data.table");
 
 library(tibble)
 library(shiny)
@@ -30,55 +31,26 @@ library(DT)
 library(plotly)
 library(htmlwidgets)
 library(ggplot2)
+library(data.table)
 
 #####################################################################
 
-
-box2 <- function(...){
-        box(
-                status = "primary",
-                solidHeader = TRUE,
-                width = 12,
-                ...
-        )
-}
-
-
-ui = dashboardPage(
-  skin = "blue",
-  dashboardHeader(title = "BiMS'TRO", titleWidth = 350),
-  # Sidebar content
-  dashboardSidebar(
-    #width sidebar
-    width = 200,
-    sidebarMenu(
-      id = "sidebarID",
-      style = "position: fixed; overflow: visible;",
-      
-      menuItem("Accueil", tabName = "Accueil"),
-      menuItem("Alumni", tabName = "Alumni"),
-      menuItem("Stages", tabName = "Stages"),
-      menuItem("Stats", tabName = "Stats"),
-      menuItem("Galerie", tabName = "Galerie")
-    )
-  ),
-  # Body content
-  dashboardBody(
+ui = navbarPage("BiMS'TRO",
     shinyjs::useShinyjs(),
     extendShinyjs(text = 'shinyjs.scrolltop = function() {window.scrollTo(0, 0)};', functions = c("scrolltop")),
-    tabItems(
-      tabItem(tabName = "Accueil"
+      tabPanel("Accueil",
+               imageOutput("logo_master")
       ),
-      tabItem(tabName = "Alumni"
+      tabPanel("Alumni",
+               DT::dataTableOutput("table")
       ),
-      tabItem(tabName = "Stages"
+      tabPanel("Stages"
       ),
-      tabItem(tabName = "Stats"
+      tabPanel("Stats"
       ),
-      tabItem(tabName = "Galerie"
-      )
-    )
-  )
+      tabPanel("Galerie"
+    ),
+    inverse=T
 )
 
         

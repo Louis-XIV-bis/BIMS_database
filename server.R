@@ -16,6 +16,7 @@ if (!require('DT', quietly = T)) install.packages('DT');
 if (!require('plotly', quietly = T)) install.packages('plotly');
 if (!require('htmlwidgets', quietly = T)) install.packages('htmlwidgets');
 if (!require('ggplot2', quietly = T)) install.packages("ggplot2");
+if (!require('data.table', quietly = T)) install.packages("data.table");
 
 library(tibble)
 library(shiny)
@@ -30,6 +31,7 @@ library(DT)
 library(plotly)
 library(htmlwidgets)
 library(ggplot2)
+library(data.table)
 
 #####################################################################
 # Usefull functions
@@ -51,6 +53,21 @@ function(input, output) {
   
   observeEvent(input$sidebarID, {
     js$scrolltop()
+  })
+  
+  data <- data_prev <- reactive({
+    df <- fread("data/data_test.csv")
+    df
+  })
+  
+  output$logo_master <- renderImage({
+    list(src = "img/BioInfo_logo_quadri_fdclair.png",
+         height = 330)
+  }, deleteFile = F)
+  
+  output$table <- DT::renderDataTable({
+    req(data)
+    DT::datatable(data())
   })
 }
 
