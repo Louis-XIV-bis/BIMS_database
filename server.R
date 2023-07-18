@@ -13,7 +13,6 @@ if (!require('shinyalert', quietly = T)) install.packages('shinyalert');
 if (!require('stringr', quietly = T)) install.packages('stringr');
 if (!require('stringi', quietly = T)) install.packages('stringi');
 if (!require('DT', quietly = T)) install.packages('DT');
-if (!require('plotly', quietly = T)) install.packages('plotly');
 if (!require('htmlwidgets', quietly = T)) install.packages('htmlwidgets');
 if (!require('ggplot2', quietly = T)) install.packages("ggplot2");
 if (!require('data.table', quietly = T)) install.packages("data.table");
@@ -28,13 +27,12 @@ library(shinyalert)
 library(stringr)
 library(stringi)
 library(DT)
-library(plotly)
 library(htmlwidgets)
 library(ggplot2)
 library(data.table)
 
 #####################################################################
-# Usefull functions
+# Useful functions
 #####################################################################
 download <- function(title,plotname){
         downloadHandler(
