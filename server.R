@@ -34,26 +34,22 @@ library(data.table)
 #####################################################################
 # Useful functions
 #####################################################################
-download <- function(title,plotname){
-        downloadHandler(
-                filename = function() { title },
-                content = function(file) {
-                        ggsave(file, plot = plotname, device = "png")
-                        }
-                )
+box2 <- function(...){
+  box(
+    status = "primary",
+    solidHeader = TRUE,
+    width = 12,
+    ...
+  )
 }
 
 ############################################################################################################################
 
 # Debut
-function(input, output) {
+function(input, output, session) {
   
   
-  observeEvent(input$sidebarID, {
-    js$scrolltop()
-  })
-  
-  data <- data_prev <- reactive({
+  data <- reactive({
     df <- fread("data/data_test.csv")
     df
   })
@@ -63,9 +59,71 @@ function(input, output) {
          height = 330)
   }, deleteFile = F)
   
-  output$table <- DT::renderDataTable({
+  observeEvent(input$tabs == "alumni", {
     req(data)
-    DT::datatable(data())
+    updateSelectizeInput(session,
+                         'entreprise', 
+                         choices = as.matrix(cbind(data()$Stage1_entreprise,
+                                                   data()$Alternance_entreprise,
+                                                   data()$Stage2_entreprise)) %>% as.vector() %>% unique(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'ville', 
+                         choices = as.matrix(cbind(data()$Stage1_ville,
+                                                   data()$Alternance_ville,
+                                                   data()$Stage2_ville)) %>% as.vector() %>% unique(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'pays', 
+                         choices = as.matrix(cbind(data()$Stage1_pays,
+                                                   data()$Alternance_pays,
+                                                   data()$Stage2_pays)) %>% as.vector() %>% unique(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'domaine', 
+                         choices = as.matrix(cbind(data()$Stage1_domaine,
+                                                   data()$Alternance_domaine,
+                                                   data()$Stage2_domaine)) %>% as.vector() %>% unique(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'contrat', 
+                         choices = data()$Poursuite_contrat %>% unique(), 
+                         server = TRUE)
+  
+    updateSelectizeInput(session, 
+                         'annee', 
+                         choices = data()$Annee_sortie %>% unique(), 
+                         server = TRUE)
+      
+      runjs("
+      $('.box').on('click', '.box-header h3', function() {
+          $(this).closest('.box')
+                 .find('[data-widget=collapse]')
+                 .click();
+      });")
+      
+      # data_filter <- reactive({
+      #   req(data)
+      #   df <- data() %>% dplyr::filter((Parcours %in% input$parcours) & 
+      #                             (Annee_sortie %in% input$annee) & 
+      #                             (Stage1_entreprise %in% input$entreprise | Stage2_entreprise %in% input$entreprise |Alternance_entreprise %in% input$entreprise) &
+      #                             (Stage1_ville %in% input$ville | Stage2_ville %in% input$ville |Alternance_ville %in% input$ville) &
+      #                             (Stage1_pays %in% input$pays | Stage2_pays %in% input$pays |Alternance_pays %in% input$pays) &
+      #                             (Stage1_domaine %in% input$domaine | Stage2_domaine %in% input$domaine |Alternance_domaine %in% input$domaine))
+      #   df
+      # })
+      
+      # req(data_filter)
+      v <- list()
+      for (i in 1:nrow(data())){
+        v[[i]] <- box2(title = h3(paste0(data()[i]$Prenom," ",data()[i]$Nom), 
+                                 style = "display:inline; font-weight:bold"),
+                      h4("test"),
+                      collapsible = T,
+                      collapsed = T
+                      )
+      }
+      output$myboxes <- renderUI(v)
   })
 }
 

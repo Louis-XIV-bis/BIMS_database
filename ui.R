@@ -32,21 +32,131 @@ library(ggplot2)
 library(data.table)
 
 #####################################################################
+box2 <- function(...){
+  box(
+    status = "primary",
+    solidHeader = TRUE,
+    width = 12,
+    ...
+  )
+}
 
-ui = navbarPage("BiMS'TRO",
-    shinyjs::useShinyjs(),
-    extendShinyjs(text = 'shinyjs.scrolltop = function() {window.scrollTo(0, 0)};', functions = c("scrolltop")),
-      tabPanel("Accueil",
-               imageOutput("logo_master")
-      ),
-      tabPanel("Alumni",
-               DT::dataTableOutput("table")
-      ),
-      tabPanel("Stages"
-      ),
-      tabPanel("Stats"
-      ),
-    inverse=T
+# javascript code to collapse box
+jscode <- "
+shinyjs.collapse = function(boxid) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
+}
+"
+
+ui = dashboardPage(skin="black",
+                   dashboardHeader(title = "BiMS'TRO", titleWidth = 350),
+    dashboardSidebar(
+      #width sidebar
+      width = 350,
+      sidebarMenu(
+        id="tabs",
+        # Menu 
+        menuItem("Accueil", tabName = "accueil", icon = icon("database")),
+        menuItem("Alumni", tabName = "alumni", icon = icon("sitemap")),
+        menuItem("Stage", tabName = "stage", icon = icon("chart-pie")),
+        menuItem("Stats", tabName = "stats", icon = icon("th"))
+      )
+    ),
+    #extendShinyjs(text = 'shinyjs.scrolltop = function() {window.scrollTo(0, 0)};', functions = c("scrolltop")),
+    # Body content
+    dashboardBody(  
+      # Including Javascript
+      useShinyjs(),
+      
+      tags$style(HTML("
+      .box-header {
+        padding: 0 10px 0 0;
+      }
+      .box-header h3 {
+        width: 100%;
+        padding: 10px;
+      }")),
+      
+      tabItems(
+        tabItem("accueil",
+                     imageOutput("logo_master")
+            ),
+        tabItem("alumni",
+                 fluidRow(
+                   column(width=4,
+                          box2(title = "Filtres",
+                               #Parcours
+                               selectInput("parcours",
+                                           label = "Parcours",
+                                           choices = c("BIMS"="BIMS",
+                                                       "CCB4"="CCB4"),
+                                          selected = NULL,
+                                          multiple = TRUE
+                                           ),
+                               #Entreprise
+                               selectizeInput('entreprise', 
+                                              label = "Entreprise",
+                                              choices = NULL,
+                                              selected = NULL,
+                                              multiple = TRUE
+                               ),
+                               #Annee
+                               selectizeInput('annee', 
+                                              label = "Année du diplôme",
+                                              choices = NULL,
+                                              selected = NULL,
+                                              multiple = TRUE
+                               ),
+                               #Ville
+                               selectizeInput('ville', 
+                                              label = "Ville",
+                                              choices = NULL,
+                                              selected = NULL,
+                                              multiple = TRUE
+                               ),
+                               #Pays
+                               selectizeInput('pays', 
+                                              label = "Pays",
+                                              choices = NULL,
+                                              selected = NULL,
+                                              multiple = TRUE
+                               ),
+                               #Domaine
+                               selectizeInput('domaine', 
+                                              label = "Domaine",
+                                              choices = NULL,
+                                              selected = NULL,
+                                              multiple = TRUE
+                               ),
+                               #Contrat
+                               selectizeInput('contrat', 
+                                              label = "Contrat post-master",
+                                              choices = NULL,
+                                              selected = NULL,
+                                              multiple = TRUE
+                               )
+                               )
+                   ),
+                   conditionalPanel("input.contrat.length >= 1|input.domaine.length >= 1|input.pays.length >= 1|input.ville.length >= 1|input.annee.length >= 1|input.entreprise.length >= 1|input.parcours.length >= 1",
+                     column(width=8,
+                            uiOutput("myboxes")
+                     )
+                   ),
+                   conditionalPanel("input.contrat.length < 1 & input.domaine.length < 1 & input.pays.length < 1 & input.ville.length < 1 & input.annee.length < 1 & input.entreprise.length < 1 & input.parcours.length < 1",
+                                    column(width=8,
+                                           box2(title = "Résultats",
+                                                h2("Trop de résultats, choisissez au moins un filtre s'il-vous-plaît")
+                                           )
+                                    )
+                   )
+                 )
+        ),
+        tabItem("stage"
+        ),
+        tabItem("stats"
+        )
+      )
+    )
 )
 
         
