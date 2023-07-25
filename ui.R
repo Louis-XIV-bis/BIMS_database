@@ -49,17 +49,18 @@ $('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
 "
 
 ui = dashboardPage(skin="black",
-                   dashboardHeader(title = "BiMS'TRO", titleWidth = 350),
+                   dashboardHeader(title = "BiMS'TRO", titleWidth = 200),
     dashboardSidebar(
       #width sidebar
-      width = 350,
+      width = 200,
       sidebarMenu(
         id="tabs",
         # Menu 
-        menuItem("Accueil", tabName = "accueil", icon = icon("database")),
-        menuItem("Alumni", tabName = "alumni", icon = icon("sitemap")),
-        menuItem("Stage", tabName = "stage", icon = icon("chart-pie")),
-        menuItem("Stats", tabName = "stats", icon = icon("th"))
+        #https://getbootstrap.com/docs/3.4/components/#glyphicons
+        menuItem("Accueil", tabName = "accueil", icon = icon("home", lib = "glyphicon")),
+        menuItem("Alumni", tabName = "alumni", icon =  icon("book", lib = "glyphicon")),
+        menuItem("Stage", tabName = "stage", icon =  icon("globe", lib = "glyphicon")),
+        menuItem("Stats", tabName = "stats", icon =  icon("signal", lib = "glyphicon"))
       )
     ),
     #extendShinyjs(text = 'shinyjs.scrolltop = function() {window.scrollTo(0, 0)};', functions = c("scrolltop")),
@@ -71,6 +72,17 @@ ui = dashboardPage(skin="black",
       tags$style(HTML("
       .box-header {
         padding: 0 10px 0 0;
+      }
+      .box.box-solid.box-primary>.box-header {
+        color:#fff;
+        background:#2E2C2C
+      }
+      .skin-black .main-header .logo{
+        background-color:#000000;
+        color:#fff
+      }
+      .skin-black .main-header .navbar {
+        background-color: #000000;
       }
       .box-header h3 {
         width: 100%;
@@ -137,18 +149,9 @@ ui = dashboardPage(skin="black",
                                )
                                )
                    ),
-                   conditionalPanel("input.contrat.length >= 1|input.domaine.length >= 1|input.pays.length >= 1|input.ville.length >= 1|input.annee.length >= 1|input.entreprise.length >= 1|input.parcours.length >= 1",
-                     column(width=8,
-                            uiOutput("myboxes")
-                     )
-                   ),
-                   conditionalPanel("input.contrat.length < 1 & input.domaine.length < 1 & input.pays.length < 1 & input.ville.length < 1 & input.annee.length < 1 & input.entreprise.length < 1 & input.parcours.length < 1",
-                                    column(width=8,
-                                           box2(title = "Résultats",
-                                                h2("Trop de résultats, choisissez au moins un filtre s'il-vous-plaît")
-                                           )
-                                    )
-                   )
+                  column(width=8,
+                        uiOutput("myboxes")
+                  )
                  )
         ),
         tabItem("stage"

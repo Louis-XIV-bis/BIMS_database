@@ -102,28 +102,89 @@ function(input, output, session) {
                  .click();
       });")
       
-      # data_filter <- reactive({
-      #   req(data)
-      #   df <- data() %>% dplyr::filter((Parcours %in% input$parcours) & 
-      #                             (Annee_sortie %in% input$annee) & 
-      #                             (Stage1_entreprise %in% input$entreprise | Stage2_entreprise %in% input$entreprise |Alternance_entreprise %in% input$entreprise) &
-      #                             (Stage1_ville %in% input$ville | Stage2_ville %in% input$ville |Alternance_ville %in% input$ville) &
-      #                             (Stage1_pays %in% input$pays | Stage2_pays %in% input$pays |Alternance_pays %in% input$pays) &
-      #                             (Stage1_domaine %in% input$domaine | Stage2_domaine %in% input$domaine |Alternance_domaine %in% input$domaine))
-      #   df
-      # })
-      
-      # req(data_filter)
-      v <- list()
-      for (i in 1:nrow(data())){
-        v[[i]] <- box2(title = h3(paste0(data()[i]$Prenom," ",data()[i]$Nom), 
-                                 style = "display:inline; font-weight:bold"),
-                      h4("test"),
-                      collapsible = T,
-                      collapsed = T
-                      )
-      }
-      output$myboxes <- renderUI(v)
+      data_filter <- reactive({
+        req(data)
+        df <- data()
+        if(!is.null(input$parcours)){
+          df <- df %>% dplyr::filter(Parcours %in% input$parcours)
+        } else if (!is.null(input$annee)){
+          df <- df %>% dplyr::filter(Annee_sortie %in% input$annee)
+        } else if (!is.null(input$entreprise)){
+          df <- df %>% dplyr::filter(Stage1_entreprise %in% input$entreprise | Stage2_entreprise %in% input$entreprise |Alternance_entreprise %in% input$entreprise)
+        } else if (!is.null(input$ville)){
+          df <- df %>% dplyr::filter(Stage1_ville %in% input$ville | Stage2_ville %in% input$ville |Alternance_ville %in% input$ville)
+        } else if (!is.null(input$pays)){
+          df <- df %>% dplyr::filter(Stage1_pays %in% input$pays | Stage2_pays %in% input$pays |Alternance_pays %in% input$pays)
+        } else if (!is.null(input$domaine)){
+          df <- df %>% dplyr::filter(Stage1_domaine %in% input$domaine | Stage2_domaine %in% input$domaine |Alternance_domaine %in% input$domaine)
+        } else {
+          df <- data()
+        }
+        df
+      })
+
+     v <- reactive({
+       req(data_filter)
+       v <- list()
+       for (i in 1:nrow(data_filter())){
+         v[[i]] <- box2(title = h3(paste0(data_filter()[i]$Prenom," ",data_filter()[i]$Nom), 
+                                   style = "display:inline; font-weight:bold"),
+                        h4(HTML(paste0("<b>Parcours :</b>  ",data_filter()[i]$Parcours))),
+                        h4(HTML(paste0("<b>Année diplôme :</b>  ",data_filter()[i]$Annee_sortie))),
+                        h4(HTML(paste0("<b>Stage M1 :</b>  ",
+                                       '<a href="',
+                                       data_filter()[i]$Stage1_site_web,
+                                       '">',
+                                       data_filter()[i]$Stage1_entreprise,
+                                       '</a>, ',
+                                       data_filter()[i]$Stage1_ville,
+                                       ", ",
+                                       data_filter()[i]$Stage1_pays,
+                                       ", #",
+                                       data_filter()[i]$Stage1_domaine))),
+                        h4(HTML(paste0("<b>Alternance :</b>  ",
+                                       '<a href="',
+                                       data_filter()[i]$Alternance_site_web,
+                                       '">',
+                                       data_filter()[i]$Alternance_entreprise,
+                                       '</a>,',
+                                       data_filter()[i]$Alternance_ville,
+                                       ", ",
+                                       data_filter()[i]$Alternance_pays,
+                                       ", #",
+                                       data_filter()[i]$Alternance_domaine))),
+                        h4(HTML(paste0("<b>Stage M2 :</b>  ",
+                                       '<a href="',
+                                       data_filter()[i]$Stage2_site_web,
+                                       '">',
+                                       data_filter()[i]$Stage2_entreprise,
+                                       '</a>, ',
+                                       data_filter()[i]$Stage2_ville,
+                                       ", ",
+                                       data_filter()[i]$Stage2_pays,
+                                       ", #",
+                                       data_filter()[i]$Stage2_domaine))),
+                        h4(HTML(paste0("<b>Post-master :</b>  ",
+                                       '<a href="',
+                                       data_filter()[i]$Poursuite_site_web,
+                                       '">',
+                                       data_filter()[i]$Poursuite_entreprise,
+                                       '</a>, ',
+                                       data_filter()[i]$Poursuite_ville,
+                                       ", ",
+                                       data_filter()[i]$Poursuite_pays,
+                                       ", #",
+                                       data_filter()[i]$Poursuite_domaine))),
+                        h4(HTML(paste0('<a href="',data_filter()[i]$Linkedin,'">Linkedin</a>'))),
+                        collapsible = T,
+                        collapsed = T
+         )
+       }
+       v
+     })
+     
+    req(v) 
+    output$myboxes <- renderUI(v())
   })
 }
 
