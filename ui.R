@@ -149,8 +149,17 @@ ui = dashboardPage(skin="black",
                                )
                                )
                    ),
-                  column(width=8,
-                        uiOutput("myboxes")
+                   conditionalPanel("input.contrat.length <1 & input.domaine.length <1 & input.pays.length <1 & input.ville.length <1 & input.annee.length <1 & input.entreprise.length <1 & (input.parcours.length < 1|input.parcours == 'BIMS')",
+                    column(width=8,
+                          box2(title = "Trop de résultats",
+                          h3("Choisis au moins un filtre"),
+                        )
+                    )
+                  ),
+                  conditionalPanel("input.contrat.length >=1 & input.domaine.length >=1 & input.pays.length >=1 & input.ville.length >=1 & input.annee.length >=1 & input.entreprise.length >=1 & (input.parcours.length >= 1|input.parcours != 'BIMS')",
+                    column(width=8,
+                           uiOutput("myboxes")
+                    )
                   )
                  )
         ),
