@@ -30,6 +30,7 @@ library(DT)
 library(htmlwidgets)
 library(ggplot2)
 library(data.table)
+library(shinyThings)
 
 #####################################################################
 box2 <- function(...){

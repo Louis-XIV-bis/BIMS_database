@@ -15,7 +15,8 @@ if (!require('stringi', quietly = T)) install.packages('stringi');
 if (!require('DT', quietly = T)) install.packages('DT');
 if (!require('htmlwidgets', quietly = T)) install.packages('htmlwidgets');
 if (!require('ggplot2', quietly = T)) install.packages("ggplot2");
-if (!require('data.table', quietly = T)) install.packages("data.table");
+if (!require('devtools', quietly = T)) install.packages("devtools");
+if (!require('shinyThings', quietly = T)) devtools::install_github("gadenbuie/shinyThings");
 
 library(tibble)
 library(shiny)
@@ -30,6 +31,8 @@ library(DT)
 library(htmlwidgets)
 library(ggplot2)
 library(data.table)
+library(devtools)
+library(shinyThings)
 
 #####################################################################
 # Useful functions
@@ -57,6 +60,7 @@ function(input, output, session) {
     df <- fread("data/data_test.csv")
     #replace empty cell with NA
     df[df == ''] <- NA
+    df <- df[order(df$Nom, df$Prenom), ]
     df
   })
   
@@ -71,34 +75,34 @@ function(input, output, session) {
                          'entreprise', 
                          choices = as.matrix(cbind(data()$Stage1_entreprise,
                                                    data()$Alternance_entreprise,
-                                                   data()$Stage2_entreprise)) %>% as.vector() %>% unique(), 
+                                                   data()$Stage2_entreprise)) %>% as.vector() %>% unique() %>% sort(), 
                          server = TRUE)
     updateSelectizeInput(session, 
                          'ville', 
                          choices = as.matrix(cbind(data()$Stage1_ville,
                                                    data()$Alternance_ville,
-                                                   data()$Stage2_ville)) %>% as.vector() %>% unique(), 
+                                                   data()$Stage2_ville)) %>% as.vector() %>% unique() %>% sort(), 
                          server = TRUE)
     updateSelectizeInput(session, 
                          'pays', 
                          choices = as.matrix(cbind(data()$Stage1_pays,
                                                    data()$Alternance_pays,
-                                                   data()$Stage2_pays)) %>% as.vector() %>% unique(), 
+                                                   data()$Stage2_pays)) %>% as.vector() %>% unique() %>% sort(), 
                          server = TRUE)
     updateSelectizeInput(session, 
                          'domaine', 
                          choices = as.matrix(cbind(data()$Stage1_domaine,
                                                    data()$Alternance_domaine,
-                                                   data()$Stage2_domaine)) %>% as.vector() %>% unique(), 
+                                                   data()$Stage2_domaine)) %>% as.vector() %>% unique() %>% sort(), 
                          server = TRUE)
     updateSelectizeInput(session, 
                          'contrat', 
-                         choices = data()$Poursuite_contrat %>% unique(), 
+                         choices = data()$Poursuite_contrat %>% unique() %>% sort(), 
                          server = TRUE)
   
     updateSelectizeInput(session, 
                          'annee', 
-                         choices = data()$Annee_sortie %>% unique(), 
+                         choices = data()$Annee_sortie %>% unique() %>% sort(), 
                          server = TRUE)
       
       runjs("
@@ -119,7 +123,7 @@ function(input, output, session) {
           conditional(!is.null(input$pays), Stage1_pays %in% input$pays | Stage2_pays %in% input$pays |Alternance_pays %in% input$pays),
           conditional(!is.null(input$domaine), Stage1_domaine %in% input$domaine | Stage2_domaine %in% input$domaine |Alternance_domaine %in% input$domaine)
         )
-        validate(need(nrow(df)!=0, "Oups, pas de résultat pour cette recherche.  \n Essaye à nouveau en modifiant les filtres !"))
+        validate(need(nrow(df)!=0, "Oups, pas de résultats pour cette recherche.  \n Essaye à nouveau en modifiant les filtres !"))
         df
       })
       
@@ -128,7 +132,7 @@ function(input, output, session) {
        req(data_filter)
        v <- list()
        for (i in 1:nrow(data_filter())){
-         v[[i]] <- box2(title = h3(paste0(data_filter()[i]$Prenom," ",data_filter()[i]$Nom), 
+         v[[i]] <- box2(title = h3(paste0(data_filter()[i]$Prenom," ",data_filter()[i]$Nom,"  \n  "), 
                                    style = "display:inline; font-weight:bold"),
                         if(!is.na(data_filter()[i]$Parcours)){
                           h4(HTML(paste0("<b>Parcours :</b>  ",data_filter()[i]$Parcours)))
@@ -213,9 +217,21 @@ function(input, output, session) {
        }
        v
      })
-     
-    req(v) 
-    output$myboxes <- renderUI(v())
+    
+      output$myboxes <- renderUI({
+        req(v)
+        if(length(v())>=6){
+          n_items <- reactiveVal(length(v()))
+          page_break <- reactive({6})
+          page_indices <- shinyThings::pager("pager", n_items, page_break)
+          pagination <- shinyThings::paginationUI("pager", width = 8, offset = 0, class = "text-center")
+          list_boxes <- v()[page_indices()]
+          return(c(pagination[[3]],list_boxes))
+        } else {
+          return(v())
+        }
+      })
   })
 }
+
 
