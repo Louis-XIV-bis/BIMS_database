@@ -31,6 +31,10 @@ library(htmlwidgets)
 library(ggplot2)
 library(data.table)
 library(shinyThings)
+library(leaflet)
+library(tidygeocoder)
+library(tibble)
+library(dplyr)
 
 #####################################################################
 box2 <- function(...){
@@ -163,7 +167,20 @@ ui = dashboardPage(skin="black",
                   )
                  )
         ),
-        tabItem("stage"
+        tabItem("stage",
+            fluidRow(
+                box2(title = "Filtre",
+                     radioButtons("stage", "Type de stage",
+                                  c("Tout" = "all",
+                                    "Stage M1" = "M1",
+                                    "Alternance" = "alternance",
+                                    "Stage M2.2" = "M2")
+                                  ),
+                )
+            
+            ),
+            leafletOutput("mymap"),
+            p()
         ),
         tabItem("stats"
         )
