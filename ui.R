@@ -45,7 +45,6 @@ library(ggrepel)
 library(viridis)
 library(dplyr)
 library(gsheet)
-
 #####################################################################
 box2 <- function(...){
   box(
@@ -174,6 +173,8 @@ ui = dashboardPage(skin="black",
                   ),
                   conditionalPanel("input.contrat.length >=1 | input.domaine.length >=1 | input.pays.length >=1 | input.ville.length >=1 | input.annee.length >=1 | input.entreprise.length >=1 | input.parcours.length >= 1",
                     column(width=8,
+                           pagination <- shinyThings::paginationUI("pager", width = 8, offset = 0, class = "text-center"),
+                           tags$hr(),
                            uiOutput("myboxes")
                     )
                   )

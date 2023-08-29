@@ -298,7 +298,7 @@ function(input, output, session) {
                           h4(HTML(paste0("<b>Parcours :</b>  ",data_filter()$Parcours[i])))
                         },
                         if(!is.na(data_filter()$Annee_sortie[i])){
-                          h4(HTML(paste0("<b>Année diplôme :</b>  ",data_filter()$Annee_sortie)))
+                        h4(HTML(paste0("<b>Année diplôme :</b>  ",data_filter()$Annee_sortie[i])))
                         },
                         if(!is.na(data_filter()$Stage1_entreprise[i]) &
                                   !is.na(data_filter()$Stage1_site_web[i]) &
@@ -378,18 +378,13 @@ function(input, output, session) {
        v
      })
     
+
+     page_break <- reactive({6})
+     print(length(v()))
+     page_indices <- shinyThings::pager("pager", length(v()), page_break)
+     
       output$myboxes <- renderUI({
-        req(v)
-        if(length(v())>=6){
-          n_items <- reactiveVal(length(v()))
-          page_break <- reactive({6})
-          page_indices <- shinyThings::pager("pager", n_items, page_break)
-          pagination <- shinyThings::paginationUI("pager", width = 8, offset = 0, class = "text-center")
-          list_boxes <- v()[page_indices()]
-          return(c(pagination[[3]],list_boxes))
-        } else {
-          return(v())
-        }
+          return(v()[page_indices()])
       })
   })
   
