@@ -105,6 +105,28 @@ ui = dashboardPage(skin="black",
       
       tabItems(
         tabItem("accueil",
+                    h1("Bienvenue à vous sur BIMS'TRO"),
+                    br(),
+                    h2("Description de l'application"),
+                    br(),
+                    h4("Cette application interactive sous R Shiny a pour but de rassembler et de mettre à disposition une base de données des étudiants du master BIMS."),
+                h4("Elle a pour but d'être utilisée lors de recherche de contact pour un stage / alternance / autre tout en fournissant quelques statistiques sur le master."),
+                br(),
+                h4("Afin que cette application dure dans le temps et puisse être utile au futur étudiants, nous invitons les promotions actuelles à mettre à jour l'application / la base de données. "),
+                h4("..."),
+                br(),
+                br(),
+                h2("Qui sommes-nous ?"),
+                br(),
+                h4("La création de cette application vient de 3 merveilleux étudiants de la promo 2023 (nous même) :"),
+                h4("Meije MATHE : https://www.linkedin.com/in/meije-mathe/"),
+                h4("Solene PETY : https://www.linkedin.com/in/solenepety/"),
+                h4("Louis OLLIVIER : https://www.linkedin.com/in/louis-ollivier/"),
+                br(),
+                h2("Liste des contributeurs"),
+                br(),
+                h4("Qui va s'agrandir au fil des années..."),
+                
                      imageOutput("logo_master")
                 
             ),
@@ -164,20 +186,11 @@ ui = dashboardPage(skin="black",
                                )
                                )
                    ),
-                   conditionalPanel("input.contrat.length <1 & input.domaine.length <1 & input.pays.length <1 & input.ville.length <1 & input.annee.length <1 & input.entreprise.length <1 & input.parcours.length < 1",
-                    column(width=8,
-                          box2(title = "Trop de résultats",
-                          h3("Choisis au moins un filtre"),
-                        )
-                    )
-                  ),
-                  conditionalPanel("input.contrat.length >=1 | input.domaine.length >=1 | input.pays.length >=1 | input.ville.length >=1 | input.annee.length >=1 | input.entreprise.length >=1 | input.parcours.length >= 1",
                     column(width=8,
                            pagination <- shinyThings::paginationUI("pager", width = 8, offset = 0, class = "text-center"),
                            tags$hr(),
                            uiOutput("myboxes")
                     )
-                  )
                  )
         ),
         tabItem("stage",
