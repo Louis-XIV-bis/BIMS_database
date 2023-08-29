@@ -1,0 +1,32 @@
+Bienvenue à vous sur BIMS'TRO ! 
+
+# Description de l'application 
+
+Cette application interactive sous R Shiny a pour but de rassembler et de mettre à disposition une base de données des étudiants du master BIMS.
+Elle a pour but d'être utilisée lors de recherche de contact pour un stage / alternance / autre tout en fournissant quelques statistiques sur le master.
+
+Afin que cette application dure dans le temps et puisse être utile au futur étudiants, nous invitons les promotions actuelles à mettre à jour l'application / la base de données. 
+
+Sur cette application vous trouverez différents onglets : 
+- une page d'accueil (où vous êtes actuellement) 
+- un répertoire des alumnis
+- une carte des lieux de stage (pas que la France !)
+- des plots résumants quelques statistiques du master
+
+# Comment contribuer ? 
+
+A FAIRE + lien site master
+
+# Qui sommes-nous ?
+
+La création de cette application vient de 3 merveilleux étudiants de la promo 2023 (nous même) : 
+
+Meije MATHE : https://www.linkedin.com/in/meije-mathe/
+Solene PETY : https://www.linkedin.com/in/solenepety/
+Louis OLLIVIER : https://www.linkedin.com/in/louis-ollivier/
+
+# Contributeurs
+
+Liste des contributeurs : 
+ 
+

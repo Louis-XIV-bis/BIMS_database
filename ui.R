@@ -31,6 +31,10 @@ library(htmlwidgets)
 library(ggplot2)
 library(data.table)
 library(shinyThings)
+library(leaflet)
+library(tidygeocoder)
+library(tibble)
+library(dplyr)
 
 #####################################################################
 box2 <- function(...){
@@ -92,6 +96,7 @@ ui = dashboardPage(skin="black",
       tabItems(
         tabItem("accueil",
                      imageOutput("logo_master")
+                
             ),
         tabItem("alumni",
                  fluidRow(
@@ -163,9 +168,56 @@ ui = dashboardPage(skin="black",
                   )
                  )
         ),
-        tabItem("stage"
+        tabItem("stage",
+            fluidRow(
+                box2(title = "Filtre",
+                     radioButtons("stage", "Type de stage",
+                                  c("Tout" = "all",
+                                    "Stage M1" = "M1",
+                                    "Alternance" = "alternance",
+                                    "Stage M2.2" = "M2")
+                                  ),
+                )
+            
+            ),
+            leafletOutput("mymap"),
+            p()
         ),
-        tabItem("stats"
+        tabItem("stats", 
+                fluidPage(
+                  titlePanel("Tableau de bord BDD BIMS"),
+                  
+                  fluidRow(
+                    
+                    column(width = 6,
+                           div(style = "border: 2px solid black; height: 500px;",
+                               plotOutput("plot_insertion", height = "100%")),
+                           downloadButton("dl_poursuite", "Téléchargement")
+                    ),
+                    
+                    column(width = 6,
+                           div(style = "border: 2px solid black; height: 500px;",
+                               plotOutput("plot_sexes", height = "100%")),
+                           downloadButton("dl_sexes", "Téléchargement")
+                    )
+                    
+                  ),
+                  
+                  fluidRow(
+                    style = "margin-top: 20px;", 
+                    column(width = 6,
+                           div(style = "border: 2px solid black; height: 500px;",
+                               plotOutput("plot_effectif_promo", height = "100%")),
+                           downloadButton("dl_effectif_promo", "Téléchargement")
+                    ),
+                    
+                    column(width = 6,
+                           div(style = "border: 2px solid black; height: 500px;",
+                               plotOutput("plot_domaines", height = "100%")),
+                           downloadButton("dl_domaines", "Téléchargement")
+                    )
+                  )
+                )
         )
       )
     )
