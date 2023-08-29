@@ -45,7 +45,7 @@ library(viridis)
 library(dplyr)
 
 #####################################################################
-# Useful functions
+                        # Useful functions
 #####################################################################
 box2 <- function(...){
   box(
@@ -132,10 +132,16 @@ create_plot_effectif_promo <- function(data) {
 }
 
 ############################################################################################################################
+                                            #server 
+############################################################################################################################
 
 # Debut
 function(input, output, session) {
-  
+
+  #####################################################################
+  # load dataset
+  #####################################################################
+
   # read data file
   data <- reactive({
     df <- fread("data/data_test.csv")
@@ -145,13 +151,80 @@ function(input, output, session) {
     df
   })
   
-  # tab Accueil
+  # reformat data for map tab 
+  data_stage_clean_points <- reactive({
+    # clean up data
+    req(data)
+    data_stage <- data()
+    # remove useless columns
+    data_stage <- subset(data_stage, select = -c(Parcours, Annee_sortie, Linkedin,Stage1_site_web, Stage1_domaine,
+                                                 Alternance_site_web, Alternance_domaine, Stage2_site_web, Stage2_domaine,
+                                                 Poursuite_contrat, Poursuite_site_web, Poursuite_domaine))
+    # M1 internship data
+    data_stageM1 <- subset(data_stage, select = c(Nom, Prenom, Stage1_entreprise, Stage1_ville, Stage1_pays))
+    colnames(data_stageM1)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
+    Stage <- rep("M1", nrow(data_stageM1))
+    data_stageM1 <- cbind(data_stageM1, Stage)
+    # apprenticeship data
+    data_alternance <- subset(data_stage, select = c(Nom, Prenom, Alternance_entreprise, Alternance_ville, Alternance_pays))
+    colnames(data_alternance)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
+    Stage <- rep("Alternance", nrow(data_alternance))
+    data_alternance <- cbind(data_alternance, Stage)
+    # M2 internship data
+    data_stageM2.2 <- subset(data_stage, select = c(Nom, Prenom, Stage2_entreprise, Stage2_ville, Stage2_pays))
+    colnames(data_stageM2.2)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
+    Stage <- rep("M2", nrow(data_stageM2.2))
+    data_stageM2.2 <- cbind(data_stageM2.2, Stage)
+    
+    # (interactive) map
+    
+    data_stage_clean <-  rbind(data_stageM1, data_alternance, data_stageM2.2)
+    # remove rows with NAs
+    data_stage_clean <- na.omit(data_stage_clean)
+    # addresses : couples ville - pays
+    villes_pays <- data_stage_clean[,c("Ville","Pays")]
+    address <- paste(villes_pays$Ville, ",", villes_pays$Pays)
+    addresses_combine <- tibble(
+      address = address
+    )
+    # geo coordinates
+    cascade_results <- addresses_combine %>%
+      geocode_combine(
+        queries = list(
+          # list(method = 'census'),
+          list(method = 'osm')
+        ),
+        global_params = list(address = 'address')
+      )
+    points = cbind(cascade_results %>% pull(long),cascade_results %>% pull(lat),gsub("^(.*?),.*", "\\1", cascade_results %>% pull(address)))
+    colnames(points)[c(1, 2, 3)] <- c("lat", "long", "Ville")
+    points[,"Ville"] <- str_sub(points[,"Ville"], end = -2)
+    # remove duplicate geo coord
+    points <- unique(points)
+    data_stage_clean_points <- merge(data_stage_clean, points, by = "Ville")
+    data_stage_clean_points$lat <- as.numeric(data_stage_clean_points$lat)
+    data_stage_clean_points$long <- as.numeric(data_stage_clean_points$long)
+    
+    data_stage_clean_points[data_stage_clean_points == "M1"] <- 1
+    data_stage_clean_points[data_stage_clean_points == "Alternance"] <- 2
+    data_stage_clean_points[data_stage_clean_points == "M2"] <- 3
+    data_stage_clean_points$Stage <- as.numeric(data_stage_clean_points$Stage)
+    data_stage_clean_points
+  })
+  
+  #####################################################################
+  # Accueil tab
+  #####################################################################
+  
   output$logo_master <- renderImage({
     list(src = "img/BioInfo_logo_quadri_fdclair.png",
          height = 330)
   }, deleteFile = F)
   
-  # tab Alumni
+  #####################################################################
+  # Alumni tab
+  #####################################################################
+  
   observeEvent(input$tabs == "alumni", {
     req(data)
     updateSelectizeInput(session,
@@ -316,68 +389,17 @@ function(input, output, session) {
       })
   })
   
-  # tab Stages
+  #####################################################################
+  # Map tab
+  #####################################################################
+  
   observeEvent(input$tabs == "stage", {
-    # clean up data
-    req(data)
-    data_stage <- data()
-    # remove useless columns
-    data_stage <- subset(data_stage, select = -c(Parcours, Annee_sortie, Linkedin,Stage1_site_web, Stage1_domaine,
-                                                 Alternance_site_web, Alternance_domaine, Stage2_site_web, Stage2_domaine,
-                                                 Poursuite_contrat, Poursuite_site_web, Poursuite_domaine))
-    # M1 internship data
-    data_stageM1 <- subset(data_stage, select = c(Nom, Prenom, Stage1_entreprise, Stage1_ville, Stage1_pays))
-    colnames(data_stageM1)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
-    Stage <- rep("M1", nrow(data_stageM1))
-    data_stageM1 <- cbind(data_stageM1, Stage)
-    # apprenticeship data
-    data_alternance <- subset(data_stage, select = c(Nom, Prenom, Alternance_entreprise, Alternance_ville, Alternance_pays))
-    colnames(data_alternance)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
-    Stage <- rep("Alternance", nrow(data_alternance))
-    data_alternance <- cbind(data_alternance, Stage)
-    # M2 internship data
-    data_stageM2.2 <- subset(data_stage, select = c(Nom, Prenom, Stage2_entreprise, Stage2_ville, Stage2_pays))
-    colnames(data_stageM2.2)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
-    Stage <- rep("M2", nrow(data_stageM2.2))
-    data_stageM2.2 <- cbind(data_stageM2.2, Stage)
     
-    # (interactive) map
-
-    data_stage_clean <-  rbind(data_stageM1, data_alternance, data_stageM2.2)
-    # remove rows with NAs
-    data_stage_clean <- na.omit(data_stage_clean)
-    # addresses : couples ville - pays
-    villes_pays <- data_stage_clean[,c("Ville","Pays")]
-    address <- paste(villes_pays$Ville, ",", villes_pays$Pays)
-    addresses_combine <- tibble(
-      address = address
-    )
-    # geo coordinates
-    cascade_results <- addresses_combine %>%
-      geocode_combine(
-        queries = list(
-          # list(method = 'census'),
-          list(method = 'osm')
-        ),
-        global_params = list(address = 'address')
-      )
-    points = cbind(cascade_results %>% pull(long),cascade_results %>% pull(lat),gsub("^(.*?),.*", "\\1", cascade_results %>% pull(address)))
-    colnames(points)[c(1, 2, 3)] <- c("lat", "long", "Ville")
-    points[,"Ville"] <- str_sub(points[,"Ville"], end = -2)
-    # remove duplicate geo coord
-    points <- unique(points)
-    data_stage_clean_points <- merge(data_stage_clean, points, by = "Ville")
-    data_stage_clean_points$lat <- as.numeric(data_stage_clean_points$lat)
-    data_stage_clean_points$long <- as.numeric(data_stage_clean_points$long)
-    
-    data_stage_clean_points[data_stage_clean_points == "M1"] <- 1
-    data_stage_clean_points[data_stage_clean_points == "Alternance"] <- 2
-    data_stage_clean_points[data_stage_clean_points == "M2"] <- 3
-    data_stage_clean_points$Stage <- as.numeric(data_stage_clean_points$Stage)
+    req(data_stage_clean_points)
     
     # remove duplicate labs ?
     
-    print(data_stage_clean_points)
+    #print(data_stage_clean_points)
 
     getColor <- function(data_stage_clean_points) {
       sapply(data_stage_clean_points$Stage, function(Stage) {
@@ -395,19 +417,23 @@ function(input, output, session) {
       icon = 'ios-close',
       iconColor = 'black',
       library = 'ion',
-      markerColor = getColor(data_stage_clean_points)
+      markerColor = getColor(data_stage_clean_points())
 
     )
     
-    print(icons)
+    #print(icons)
     
     output$mymap <- renderLeaflet({
-      leaflet(data_stage_clean_points) %>%
+      leaflet(data_stage_clean_points()) %>%
         addTiles() %>%
         addAwesomeMarkers(~ lat, ~ long, icon = icons, popup = ~ Entreprise,
                           clusterOptions = markerClusterOptions())
     })
   })
+  
+  #####################################################################
+  # Plot tab
+  #####################################################################
   
   # Plot type de contrat insertion
   pie_plot_insertion <- reactive({

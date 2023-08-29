@@ -71,6 +71,7 @@ ui = dashboardPage(skin="black",
     #extendShinyjs(text = 'shinyjs.scrolltop = function() {window.scrollTo(0, 0)};', functions = c("scrolltop")),
     # Body content
     dashboardBody(  
+      add_busy_gif(src = 'cat.gif', position = 'full-page', timeout = 300),
       # Including Javascript
       useShinyjs(),
       tags$style(HTML("
