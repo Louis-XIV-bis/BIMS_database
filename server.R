@@ -20,6 +20,7 @@ if (!require('shinyThings', quietly = T)) devtools::install_github("gadenbuie/sh
 if (!require('ggrepel', quietly = T)) install.packages("ggrepel");
 if (!require('viridis', quietly = T)) install.packages("viridis");
 if (!require('dplyr', quietly = T)) install.packages("dplyr");
+if (!require('gsheet', quietly = T)) install.packages("gsheet");
 
 library(tibble)
 library(shiny)
@@ -43,6 +44,7 @@ library(dplyr)
 library(ggrepel)
 library(viridis)
 library(dplyr)
+library(gsheet)
 
 #####################################################################
                         # Useful functions
@@ -131,6 +133,7 @@ create_plot_effectif_promo <- function(data) {
     theme(plot.title = element_text(size = 16, hjust = 0.5))  # Center-align the title
 }
 
+
 ############################################################################################################################
                                             #server 
 ############################################################################################################################
@@ -144,7 +147,8 @@ function(input, output, session) {
 
   # read data file
   data <- reactive({
-    df <- fread("data/data_test.csv")
+    url <- "https://docs.google.com/spreadsheets/d/1K-3kAdyWFrslbS-6FRazDS9H4cX9jKleLr6a1YRdTp4/edit?usp=sharing"
+    df <- gsheet2tbl(url)
     #replace empty cell with NA
     df[df == ''] <- NA
     df <- df[order(df$Nom, df$Prenom), ]

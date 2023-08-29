@@ -15,7 +15,12 @@ if (!require('stringi', quietly = T)) install.packages('stringi');
 if (!require('DT', quietly = T)) install.packages('DT');
 if (!require('htmlwidgets', quietly = T)) install.packages('htmlwidgets');
 if (!require('ggplot2', quietly = T)) install.packages("ggplot2");
-if (!require('data.table', quietly = T)) install.packages("data.table");
+if (!require('devtools', quietly = T)) install.packages("devtools");
+if (!require('shinyThings', quietly = T)) devtools::install_github("gadenbuie/shinyThings");
+if (!require('ggrepel', quietly = T)) install.packages("ggrepel");
+if (!require('viridis', quietly = T)) install.packages("viridis");
+if (!require('dplyr', quietly = T)) install.packages("dplyr");
+if (!require('gsheet', quietly = T)) install.packages("gsheet");
 
 library(tibble)
 library(shiny)
@@ -30,11 +35,16 @@ library(DT)
 library(htmlwidgets)
 library(ggplot2)
 library(data.table)
+library(devtools)
 library(shinyThings)
 library(leaflet)
 library(tidygeocoder)
 library(tibble)
 library(dplyr)
+library(ggrepel)
+library(viridis)
+library(dplyr)
+library(gsheet)
 
 #####################################################################
 box2 <- function(...){
