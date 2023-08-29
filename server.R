@@ -1,0 +1,564 @@
+
+#####################################################################
+# Initialisation des packages 
+
+options(timeout = 2000)
+if (!require('tibble', quietly = T)) install.packages('tibble');
+if (!require('shiny', quietly = T)) install.packages('shiny');
+if (!require('shinydashboard', quietly = T)) install.packages('shinydashboard');
+if (!require('shinybusy', quietly = T)) install.packages('shinybusy');
+if (!require('shinycssloaders', quietly = T)) install.packages('shinycssloaders');
+if (!require('shinyjs', quietly = T)) install.packages('shinyjs');
+if (!require('shinyalert', quietly = T)) install.packages('shinyalert');
+if (!require('stringr', quietly = T)) install.packages('stringr');
+if (!require('stringi', quietly = T)) install.packages('stringi');
+if (!require('DT', quietly = T)) install.packages('DT');
+if (!require('htmlwidgets', quietly = T)) install.packages('htmlwidgets');
+if (!require('ggplot2', quietly = T)) install.packages("ggplot2");
+if (!require('devtools', quietly = T)) install.packages("devtools");
+if (!require('shinyThings', quietly = T)) devtools::install_github("gadenbuie/shinyThings");
+if (!require('ggrepel', quietly = T)) install.packages("ggrepel");
+if (!require('viridis', quietly = T)) install.packages("viridis");
+if (!require('dplyr', quietly = T)) install.packages("dplyr");
+
+library(tibble)
+library(shiny)
+library(shinydashboard)
+library(shinybusy)
+library(shinycssloaders)
+library(shinyjs)
+library(shinyalert)
+library(stringr)
+library(stringi)
+library(DT)
+library(htmlwidgets)
+library(ggplot2)
+library(data.table)
+library(devtools)
+library(shinyThings)
+library(leaflet)
+library(tidygeocoder)
+library(tibble)
+library(dplyr)
+library(ggrepel)
+library(viridis)
+library(dplyr)
+
+#####################################################################
+# Useful functions
+#####################################################################
+box2 <- function(...){
+  box(
+    status = "primary",
+    solidHeader = TRUE,
+    width = 12,
+    ...
+  )
+}
+
+conditional <- function(condition, success) {
+  if (condition) success else TRUE
+}
+
+# Créer le pie plot pour le type de contrat (poursuite)
+create_pie_plot_poursuite <- function(data) {
+  
+  # Calcul des position pour les labels
+  data <- data %>%
+    mutate(Pourcentage = round((Effectif / sum(Effectif)) * 100, digits = 1))
+  
+  df2 <- data %>% 
+    mutate(csum = rev(cumsum(rev(Effectif))), 
+           pos = Effectif/2 + lead(csum, 1),
+           pos = if_else(is.na(pos), Effectif/2, pos))
+  
+  total_n = cumsum(data$Effectif)
+  
+  ggplot(data = data, aes(x = "", y = Effectif, fill = Contrat)) +
+    geom_col(width = 1, color = 1) +
+    geom_bar(stat="identity", width=1, color="white") +
+    geom_text(aes(label = paste0(Pourcentage,"%")), position = position_stack(vjust = 0.5)) +
+    geom_label_repel(data = df2, 
+                     aes(y = pos, label = Contrat),
+                     size = 4.5, nudge_x = 1, label.padding = 0.5, point.padding = 7, show.legend = FALSE) +
+    coord_polar("y", start=0) +
+    theme_void() +
+    labs(title = paste0("Poursuite de carrière des étudiants du master BIMS (n = ", total_n,")")) +
+    theme(legend.position = "none", 
+          plot.title = element_text(size = 16, hjust = 0.5))  # Center-align the title
+  
+}
+
+# Créer le pie plot pour la répartition des domaines
+create_pie_plot_domaine <- function(data) {
+  
+  # Calcul des position pour les labels
+  data <- data %>%
+    mutate(Pourcentage = round((Effectif / sum(Effectif)) * 100, digits = 1))
+  
+  total_n = sum(data$Effectif)
+  
+  ggplot(data = data, aes(x = "", y = Effectif, fill = Domaine)) +
+    geom_col(width = 1, color = 1) +
+    geom_bar(stat="identity", width=1, color="white") +
+    geom_text(aes(label = paste0(Pourcentage,"%")), position = position_stack(vjust = 0.5)) +
+    coord_polar("y", start=0) +
+    theme_void() +
+    labs(title = paste0("Représentation des domaines de la bioinformatique des étudiants du master BIMS (n = ", total_n, ")"),
+         subtitle = "Somme des différentes expériences des étudiants (stage(s) et alternance)") +
+    theme(plot.title = element_text(size = 16, hjust = 0.5))  # Center-align the title
+  
+}
+
+# Créer le bar plot pour la répartition des sexes
+create_plot_sexe <- function(data) {
+  
+  total_n = sum(data$Effectif)
+  
+  ggplot(data = data, aes(x = Parcours, y = Effectif, fill = Sexe)) +
+    geom_bar(stat = "identity", color="black") +
+    theme_minimal() + 
+    labs(title = paste0("Répartition des sexes au sein du master BIMS (n = ", total_n, ")")) +
+    theme(plot.title = element_text(size = 16, hjust = 0.5))  # Center-align the title
+}
+
+# Créer le bar plot pour la répartition des effectifs par promo
+create_plot_effectif_promo <- function(data) {
+  ggplot(data = data, aes(x = Promotion, y = Effectif, fill = Parcours)) +
+    geom_bar(stat = "identity", color="black") +
+    theme_minimal() +
+    labs(title = "Effectifs des différentes promotions du master BIMS") +
+    theme(plot.title = element_text(size = 16, hjust = 0.5))  # Center-align the title
+}
+
+############################################################################################################################
+
+# Debut
+function(input, output, session) {
+  
+  # read data file
+  data <- reactive({
+    df <- fread("data/data_test.csv")
+    #replace empty cell with NA
+    df[df == ''] <- NA
+    df <- df[order(df$Nom, df$Prenom), ]
+    df
+  })
+  
+  # tab Accueil
+  output$logo_master <- renderImage({
+    list(src = "img/BioInfo_logo_quadri_fdclair.png",
+         height = 330)
+  }, deleteFile = F)
+  
+  # tab Alumni
+  observeEvent(input$tabs == "alumni", {
+    req(data)
+    updateSelectizeInput(session,
+                         'entreprise', 
+                         choices = as.matrix(cbind(data()$Stage1_entreprise,
+                                                   data()$Alternance_entreprise,
+                                                   data()$Stage2_entreprise)) %>% as.vector() %>% unique() %>% sort(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'ville', 
+                         choices = as.matrix(cbind(data()$Stage1_ville,
+                                                   data()$Alternance_ville,
+                                                   data()$Stage2_ville)) %>% as.vector() %>% unique() %>% sort(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'pays', 
+                         choices = as.matrix(cbind(data()$Stage1_pays,
+                                                   data()$Alternance_pays,
+                                                   data()$Stage2_pays)) %>% as.vector() %>% unique() %>% sort(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'domaine', 
+                         choices = as.matrix(cbind(data()$Stage1_domaine,
+                                                   data()$Alternance_domaine,
+                                                   data()$Stage2_domaine)) %>% as.vector() %>% unique() %>% sort(), 
+                         server = TRUE)
+    updateSelectizeInput(session, 
+                         'contrat', 
+                         choices = data()$Poursuite_contrat %>% unique() %>% sort(), 
+                         server = TRUE)
+  
+    updateSelectizeInput(session, 
+                         'annee', 
+                         choices = data()$Annee_sortie %>% unique() %>% sort(), 
+                         server = TRUE)
+      
+      runjs("
+      $('.box').on('click', '.box-header h3', function() {
+          $(this).closest('.box')
+                 .find('[data-widget=collapse]')
+                 .click();
+      });")
+      
+      data_filter <- reactive({
+        req(data)
+        df <- data()
+        df <- df %>% dplyr::filter(
+          conditional(!is.null(input$parcours), Parcours %in% input$parcours),
+          conditional(!is.null(input$annee), Annee_sortie %in% input$annee),
+          conditional(!is.null(input$entreprise), Stage1_entreprise %in% input$entreprise | Stage2_entreprise %in% input$entreprise |Alternance_entreprise %in% input$entreprise),
+          conditional(!is.null(input$ville), Stage1_ville %in% input$ville | Stage2_ville %in% input$ville |Alternance_ville %in% input$ville),
+          conditional(!is.null(input$pays), Stage1_pays %in% input$pays | Stage2_pays %in% input$pays |Alternance_pays %in% input$pays),
+          conditional(!is.null(input$domaine), Stage1_domaine %in% input$domaine | Stage2_domaine %in% input$domaine |Alternance_domaine %in% input$domaine)
+        )
+        validate(need(nrow(df)!=0, "Oups, pas de résultats pour cette recherche.  \n Essaye à nouveau en modifiant les filtres !"))
+        df
+      })
+      
+      req(data_filter)
+     v <- reactive({
+       req(data_filter)
+       v <- list()
+       for (i in 1:nrow(data_filter())){
+         v[[i]] <- box2(title = h3(paste0(data_filter()[i]$Prenom," ",data_filter()[i]$Nom,"  \n  "), 
+                                   style = "display:inline; font-weight:bold"),
+                        if(!is.na(data_filter()[i]$Parcours)){
+                          h4(HTML(paste0("<b>Parcours :</b>  ",data_filter()[i]$Parcours)))
+                        },
+                        if(!is.na(data_filter()[i]$Annee_sortie)){
+                          h4(HTML(paste0("<b>Année diplôme :</b>  ",data_filter()[i]$Annee_sortie)))
+                        },
+                        if(!is.na(data_filter()[i]$Stage1_entreprise) &
+                                  !is.na(data_filter()[i]$Stage1_site_web) &
+                                         !is.na(data_filter()[i]$Stage1_ville) &
+                                                !is.na(data_filter()[i]$Stage1_pays) &
+                                                       !is.na(data_filter()[i]$Stage1_domaine)){
+                          h4(HTML(paste0("<b>Stage M1 :</b>  ",
+                                         '<a href="',
+                                         data_filter()[i]$Stage1_site_web,
+                                         '">',
+                                         data_filter()[i]$Stage1_entreprise,
+                                         '</a>, ',
+                                         data_filter()[i]$Stage1_ville,
+                                         ", ",
+                                         data_filter()[i]$Stage1_pays,
+                                         ", #",
+                                         data_filter()[i]$Stage1_domaine)))
+                        },
+                        if(!is.na(data_filter()[i]$Alternance_entreprise) &
+                                  !is.na(data_filter()[i]$Alternance_site_web) &
+                                         !is.na(data_filter()[i]$Alternance_ville) &
+                                                !is.na(data_filter()[i]$Alternance_pays) &
+                                                       !is.na(data_filter()[i]$Alternance_domaine)){
+                          h4(HTML(paste0("<b>Alternance :</b>  ",
+                                         '<a href="',
+                                         data_filter()[i]$Alternance_site_web,
+                                         '">',
+                                         data_filter()[i]$Alternance_entreprise,
+                                         '</a>,',
+                                         data_filter()[i]$Alternance_ville,
+                                         ", ",
+                                         data_filter()[i]$Alternance_pays,
+                                         ", #",
+                                         data_filter()[i]$Alternance_domaine)))
+                        },
+                        if(!is.na(data_filter()[i]$Stage2_entreprise) &
+                                  !is.na(data_filter()[i]$Stage2_site_web) &
+                                         !is.na(data_filter()[i]$Stage2_ville) &
+                                                !is.na(data_filter()[i]$Stage2_pays) &
+                                                       !is.na(data_filter()[i]$Stage2_domaine)){
+                          h4(HTML(paste0("<b>Stage M2 :</b>  ",
+                                         '<a href="',
+                                         data_filter()[i]$Stage2_site_web,
+                                         '">',
+                                         data_filter()[i]$Stage2_entreprise,
+                                         '</a>, ',
+                                         data_filter()[i]$Stage2_ville,
+                                         ", ",
+                                         data_filter()[i]$Stage2_pays,
+                                         ", #",
+                                         data_filter()[i]$Stage2_domaine)))
+                        },
+                        if(!is.na(data_filter()[i]$Poursuite_entreprise) &
+                                  !is.na(data_filter()[i]$Poursuite_site_web) &
+                                         !is.na(data_filter()[i]$Poursuite_ville) &
+                                                !is.na(data_filter()[i]$Poursuite_pays) &
+                                                       !is.na(data_filter()[i]$Poursuite_domaine)){
+                          h4(HTML(paste0("<b>Post-master :</b>  ",
+                                         '<a href="',
+                                         data_filter()[i]$Poursuite_site_web,
+                                         '">',
+                                         data_filter()[i]$Poursuite_entreprise,
+                                         '</a>, ',
+                                         data_filter()[i]$Poursuite_ville,
+                                         ", ",
+                                         data_filter()[i]$Poursuite_pays,
+                                         ", #",
+                                         data_filter()[i]$Poursuite_domaine)))
+                        },
+                        if(!is.na(data_filter()[i]$Linkedin)){
+                          h4(HTML(paste0('<a href="',data_filter()[i]$Linkedin,'">Linkedin</a>')))
+                        },
+                        collapsible = T,
+                        collapsed = T
+         )
+       }
+       v
+     })
+    
+      output$myboxes <- renderUI({
+        req(v)
+        if(length(v())>=6){
+          n_items <- reactiveVal(length(v()))
+          page_break <- reactive({6})
+          page_indices <- shinyThings::pager("pager", n_items, page_break)
+          pagination <- shinyThings::paginationUI("pager", width = 8, offset = 0, class = "text-center")
+          list_boxes <- v()[page_indices()]
+          return(c(pagination[[3]],list_boxes))
+        } else {
+          return(v())
+        }
+      })
+  })
+  
+  # tab Stages
+  observeEvent(input$tabs == "stage", {
+    # clean up data
+    req(data)
+    data_stage <- data()
+    # remove useless columns
+    data_stage <- subset(data_stage, select = -c(Parcours, Annee_sortie, Linkedin,Stage1_site_web, Stage1_domaine,
+                                                 Alternance_site_web, Alternance_domaine, Stage2_site_web, Stage2_domaine,
+                                                 Poursuite_contrat, Poursuite_site_web, Poursuite_domaine))
+    # M1 internship data
+    data_stageM1 <- subset(data_stage, select = c(Nom, Prenom, Stage1_entreprise, Stage1_ville, Stage1_pays))
+    colnames(data_stageM1)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
+    Stage <- rep("M1", nrow(data_stageM1))
+    data_stageM1 <- cbind(data_stageM1, Stage)
+    # apprenticeship data
+    data_alternance <- subset(data_stage, select = c(Nom, Prenom, Alternance_entreprise, Alternance_ville, Alternance_pays))
+    colnames(data_alternance)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
+    Stage <- rep("Alternance", nrow(data_alternance))
+    data_alternance <- cbind(data_alternance, Stage)
+    # M2 internship data
+    data_stageM2.2 <- subset(data_stage, select = c(Nom, Prenom, Stage2_entreprise, Stage2_ville, Stage2_pays))
+    colnames(data_stageM2.2)[c(3, 4, 5)] <- c("Entreprise", "Ville", "Pays")
+    Stage <- rep("M2", nrow(data_stageM2.2))
+    data_stageM2.2 <- cbind(data_stageM2.2, Stage)
+    
+    # (interactive) map
+
+    data_stage_clean <-  rbind(data_stageM1, data_alternance, data_stageM2.2)
+    # remove rows with NAs
+    data_stage_clean <- na.omit(data_stage_clean)
+    # addresses : couples ville - pays
+    villes_pays <- data_stage_clean[,c("Ville","Pays")]
+    address <- paste(villes_pays$Ville, ",", villes_pays$Pays)
+    addresses_combine <- tibble(
+      address = address
+    )
+    # geo coordinates
+    cascade_results <- addresses_combine %>%
+      geocode_combine(
+        queries = list(
+          # list(method = 'census'),
+          list(method = 'osm')
+        ),
+        global_params = list(address = 'address')
+      )
+    points = cbind(cascade_results %>% pull(long),cascade_results %>% pull(lat),gsub("^(.*?),.*", "\\1", cascade_results %>% pull(address)))
+    colnames(points)[c(1, 2, 3)] <- c("lat", "long", "Ville")
+    points[,"Ville"] <- str_sub(points[,"Ville"], end = -2)
+    # remove duplicate geo coord
+    points <- unique(points)
+    data_stage_clean_points <- merge(data_stage_clean, points, by = "Ville")
+    data_stage_clean_points$lat <- as.numeric(data_stage_clean_points$lat)
+    data_stage_clean_points$long <- as.numeric(data_stage_clean_points$long)
+    
+    data_stage_clean_points[data_stage_clean_points == "M1"] <- 1
+    data_stage_clean_points[data_stage_clean_points == "Alternance"] <- 2
+    data_stage_clean_points[data_stage_clean_points == "M2"] <- 3
+    data_stage_clean_points$Stage <- as.numeric(data_stage_clean_points$Stage)
+    
+    # remove duplicate labs ?
+    
+    print(data_stage_clean_points)
+
+    getColor <- function(data_stage_clean_points) {
+      sapply(data_stage_clean_points$Stage, function(Stage) {
+        if(Stage == 1) {
+          "green"
+        } else if(Stage == 2) {
+          "orange"
+        } else {
+          "red"
+        } 
+      })
+    }
+
+    icons <- awesomeIcons(
+      icon = 'ios-close',
+      iconColor = 'black',
+      library = 'ion',
+      markerColor = getColor(data_stage_clean_points)
+
+    )
+    
+    print(icons)
+    
+    output$mymap <- renderLeaflet({
+      leaflet(data_stage_clean_points) %>%
+        addTiles() %>%
+        addAwesomeMarkers(~ lat, ~ long, icon = icons, popup = ~ Entreprise,
+                          clusterOptions = markerClusterOptions())
+    })
+  })
+  
+  # Plot type de contrat insertion
+  pie_plot_insertion <- reactive({
+    
+    # Recupère les données 
+    req(data)
+    pie_data <- table(data()$Poursuite_contrat)
+    
+    # Transforme les données en data.frame pour la suite (ggplot2)
+    pie_data <- data.frame(pie_data)
+    colnames(pie_data) <- c("Contrat", "Effectif")
+    
+    # Suppression des NA dans le jeu de données 
+    pie_data <- subset(pie_data, Contrat != "")
+    
+    # Appel de la fonction pour créer le plot
+    create_pie_plot_poursuite(pie_data)
+    
+  })
+  
+  # Plot domaine
+  pie_plot_domaine <- reactive({
+    
+    # Recupère les données des différents domaines toutes expériences confondues
+    req(data)
+    
+    stage1 <- table(data()$Stage1_domaine)
+    alternance <- table(data()$Alternance_domaine)
+    stage2 <- table(data()$Stage2_domaine)
+    
+    # Combiner les données en un seul tableau 
+    pie_data <- data.frame(
+      Value = names(c(stage1,  alternance, stage2)),
+      Total_Frequency = as.vector(c(stage1,  alternance, stage2))
+    )
+    
+    colnames(pie_data) <- c("Domaine", "Effectif")
+    
+    # Suppression des NA dans le jeu de données + grouper les domaines
+    pie_data <- subset(pie_data, Domaine != "") %>%
+      group_by(Domaine) %>%
+      summarize(Effectif = sum(Effectif) + n() - 1)
+    
+    # Appel de la fonction pour créer le plot
+    create_pie_plot_domaine(pie_data)
+    
+  })
+  
+  # Plot repartition des sexes 
+  barplot_sexe <- reactive({
+    
+    # Recupère les données 
+    req(data)
+    data_sexe <- table(data()$Sexe, data()$Parcours) 
+    
+    # Supprimer les valeurs manquantes du jeu de données
+    row_names <- rownames(data_sexe)
+    empty_labels <- row_names[row_names == ""]
+    data_sexe <- data_sexe[!rownames(data_sexe) %in% empty_labels, ]
+    
+    # Transforme les données en data.frame pour la suite (ggplot2)
+    data_sexe <- data.frame(data_sexe)
+    colnames(data_sexe) <- c("Sexe", "Parcours", "Effectif")
+    
+    # Appel de la fonction pour créer le plot
+    create_plot_sexe(data_sexe)
+    
+  })
+  
+  
+  # Plot effectif par promo 
+  barplot_effectif_promo <- reactive({
+    
+    # Recupère les données 
+    req(data)
+    data_promo <- table(data()$Annee_sortie,data()$Parcours)
+    
+    # Transforme les données en data.frame pour la suite (ggplot2)
+    data_promo <- data.frame(data_promo)
+    
+    colnames(data_promo) <- c("Promotion", "Parcours", "Effectif")
+    data_promo <- subset(data_promo, Parcours != "")
+    print(data_promo)
+    
+    # Appel de la fonction pour créer le plot
+    create_plot_effectif_promo(data_promo)
+    
+  })
+  
+  
+  output$plot_insertion <- renderPlot({
+    pie_plot_insertion()
+    
+  })
+  
+  output$plot_domaines <- renderPlot({
+    pie_plot_domaine() 
+    
+  })
+  
+  output$plot_sexes <- renderPlot({
+    barplot_sexe() 
+    
+  })
+  
+  output$plot_effectif_promo <- renderPlot({
+    barplot_effectif_promo() 
+    
+  })
+  
+  
+  output$dl_poursuite <- downloadHandler(
+    filename = function() {
+      "poursuite.pdf"
+    },
+    content = function(file) {
+      ggsave(file, plot = pie_plot_insertion(), device = "pdf")
+      
+    }
+  )
+  
+  output$dl_domaines <- downloadHandler(
+    filename = function() {
+      "domaines.pdf"
+    },
+    content = function(file) {
+      ggsave(file, plot = pie_plot_domaine(), device = "pdf")
+      
+    }
+  )
+  
+  output$dl_sexes <- downloadHandler(
+    filename = function() {
+      "sexes.pdf"
+    },
+    content = function(file) {
+      ggsave(file, plot = barplot_sexe(), device = "pdf")
+      
+    }
+  )
+  
+  output$dl_effectif_promo <- downloadHandler(
+    filename = function() {
+      "effectif_promos.pdf"
+    },
+    content = function(file) {
+      ggsave(file, plot = barplot_effectif_promo(), device = "pdf")
+      
+    }
+  )
+  
+}
+
+
