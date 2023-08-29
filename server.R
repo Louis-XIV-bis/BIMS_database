@@ -290,86 +290,87 @@ function(input, output, session) {
       req(data_filter)
      v <- reactive({
        req(data_filter)
+       print(data_filter()[1])
        v <- list()
        for (i in 1:nrow(data_filter())){
-         v[[i]] <- box2(title = h3(paste0(data_filter()[i]$Prenom," ",data_filter()[i]$Nom,"  \n  "), 
+         v[[i]] <- box2(title = h3(paste0(data_filter()$Prenom[i]," ",data_filter()$Nom[i],"  \n  "), 
                                    style = "display:inline; font-weight:bold"),
-                        if(!is.na(data_filter()[i]$Parcours)){
-                          h4(HTML(paste0("<b>Parcours :</b>  ",data_filter()[i]$Parcours)))
+                        if(!is.na(data_filter()$Parcours[i])){
+                          h4(HTML(paste0("<b>Parcours :</b>  ",data_filter()$Parcours[i])))
                         },
-                        if(!is.na(data_filter()[i]$Annee_sortie)){
-                          h4(HTML(paste0("<b>Année diplôme :</b>  ",data_filter()[i]$Annee_sortie)))
+                        if(!is.na(data_filter()$Annee_sortie[i])){
+                          h4(HTML(paste0("<b>Année diplôme :</b>  ",data_filter()$Annee_sortie)))
                         },
-                        if(!is.na(data_filter()[i]$Stage1_entreprise) &
-                                  !is.na(data_filter()[i]$Stage1_site_web) &
-                                         !is.na(data_filter()[i]$Stage1_ville) &
-                                                !is.na(data_filter()[i]$Stage1_pays) &
-                                                       !is.na(data_filter()[i]$Stage1_domaine)){
+                        if(!is.na(data_filter()$Stage1_entreprise[i]) &
+                                  !is.na(data_filter()$Stage1_site_web[i]) &
+                                         !is.na(data_filter()$Stage1_ville[i]) &
+                                                !is.na(data_filter()$Stage1_pays[i]) &
+                                                       !is.na(data_filter()$Stage1_domaine[i])){
                           h4(HTML(paste0("<b>Stage M1 :</b>  ",
                                          '<a href="',
-                                         data_filter()[i]$Stage1_site_web,
+                                         data_filter()$Stage1_site_web[i],
                                          '">',
-                                         data_filter()[i]$Stage1_entreprise,
+                                         data_filter()$Stage1_entreprise[i],
                                          '</a>, ',
-                                         data_filter()[i]$Stage1_ville,
+                                         data_filter()$Stage1_ville[i],
                                          ", ",
-                                         data_filter()[i]$Stage1_pays,
+                                         data_filter()$Stage1_pays[i],
                                          ", #",
-                                         data_filter()[i]$Stage1_domaine)))
+                                         data_filter()$Stage1_domaine[i])))
                         },
-                        if(!is.na(data_filter()[i]$Alternance_entreprise) &
-                                  !is.na(data_filter()[i]$Alternance_site_web) &
-                                         !is.na(data_filter()[i]$Alternance_ville) &
-                                                !is.na(data_filter()[i]$Alternance_pays) &
-                                                       !is.na(data_filter()[i]$Alternance_domaine)){
+                        if(!is.na(data_filter()$Alternance_entreprise[i]) &
+                                  !is.na(data_filter()$Alternance_site_web[i]) &
+                                         !is.na(data_filter()$Alternance_ville[i]) &
+                                                !is.na(data_filter()$Alternance_pays[i]) &
+                                                       !is.na(data_filter()$Alternance_domaine[i])){
                           h4(HTML(paste0("<b>Alternance :</b>  ",
                                          '<a href="',
-                                         data_filter()[i]$Alternance_site_web,
+                                         data_filter()$Alternance_site_web[i],
                                          '">',
-                                         data_filter()[i]$Alternance_entreprise,
+                                         data_filter()$Alternance_entreprise[i],
                                          '</a>,',
-                                         data_filter()[i]$Alternance_ville,
+                                         data_filter()$Alternance_ville[i],
                                          ", ",
-                                         data_filter()[i]$Alternance_pays,
+                                         data_filter()$Alternance_pays[i],
                                          ", #",
-                                         data_filter()[i]$Alternance_domaine)))
+                                         data_filter()$Alternance_domaine[i])))
                         },
-                        if(!is.na(data_filter()[i]$Stage2_entreprise) &
-                                  !is.na(data_filter()[i]$Stage2_site_web) &
-                                         !is.na(data_filter()[i]$Stage2_ville) &
-                                                !is.na(data_filter()[i]$Stage2_pays) &
-                                                       !is.na(data_filter()[i]$Stage2_domaine)){
+                        if(!is.na(data_filter()$Stage2_entreprise[i]) &
+                                  !is.na(data_filter()$Stage2_site_web[i]) &
+                                         !is.na(data_filter()$Stage2_ville[i]) &
+                                                !is.na(data_filter()$Stage2_pays[i]) &
+                                                       !is.na(data_filter()$Stage2_domaine[i])){
                           h4(HTML(paste0("<b>Stage M2 :</b>  ",
                                          '<a href="',
-                                         data_filter()[i]$Stage2_site_web,
+                                         data_filter()$Stage2_site_web[i],
                                          '">',
-                                         data_filter()[i]$Stage2_entreprise,
+                                         data_filter()$Stage2_entreprise[i],
                                          '</a>, ',
-                                         data_filter()[i]$Stage2_ville,
+                                         data_filter()$Stage2_ville[i],
                                          ", ",
-                                         data_filter()[i]$Stage2_pays,
+                                         data_filter()$Stage2_pays[i],
                                          ", #",
-                                         data_filter()[i]$Stage2_domaine)))
+                                         data_filter()$Stage2_domaine[i])))
                         },
-                        if(!is.na(data_filter()[i]$Poursuite_entreprise) &
-                                  !is.na(data_filter()[i]$Poursuite_site_web) &
-                                         !is.na(data_filter()[i]$Poursuite_ville) &
-                                                !is.na(data_filter()[i]$Poursuite_pays) &
-                                                       !is.na(data_filter()[i]$Poursuite_domaine)){
+                        if(!is.na(data_filter()$Poursuite_entreprise[i]) &
+                                  !is.na(data_filter()$Poursuite_site_web[i]) &
+                                         !is.na(data_filter()$Poursuite_ville[i]) &
+                                                !is.na(data_filter()$Poursuite_pays[i]) &
+                                                       !is.na(data_filter()$Poursuite_domaine[i])){
                           h4(HTML(paste0("<b>Post-master :</b>  ",
                                          '<a href="',
-                                         data_filter()[i]$Poursuite_site_web,
+                                         data_filter()$Poursuite_site_web[i],
                                          '">',
-                                         data_filter()[i]$Poursuite_entreprise,
+                                         data_filter()$Poursuite_entreprise[i],
                                          '</a>, ',
-                                         data_filter()[i]$Poursuite_ville,
+                                         data_filter()$Poursuite_ville[i],
                                          ", ",
-                                         data_filter()[i]$Poursuite_pays,
+                                         data_filter()$Poursuite_pays[i],
                                          ", #",
-                                         data_filter()[i]$Poursuite_domaine)))
+                                         data_filter()$Poursuite_domaine[i])))
                         },
-                        if(!is.na(data_filter()[i]$Linkedin)){
-                          h4(HTML(paste0('<a href="',data_filter()[i]$Linkedin,'">Linkedin</a>')))
+                        if(!is.na(data_filter()$Linkedin[i])){
+                          h4(HTML(paste0('<a href="',data_filter()$Linkedin[i],'">Linkedin</a>')))
                         },
                         collapsible = T,
                         collapsed = T
