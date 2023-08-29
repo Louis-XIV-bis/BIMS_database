@@ -290,7 +290,6 @@ function(input, output, session) {
       req(data_filter)
      v <- reactive({
        req(data_filter)
-       print(data_filter()[1])
        v <- list()
        for (i in 1:nrow(data_filter())){
          v[[i]] <- box2(title = h3(paste0(data_filter()$Prenom[i]," ",data_filter()$Nom[i],"  \n  "), 
@@ -521,7 +520,7 @@ function(input, output, session) {
     
     colnames(data_promo) <- c("Promotion", "Parcours", "Effectif")
     data_promo <- subset(data_promo, Parcours != "")
-    print(data_promo)
+    #print(data_promo)
     
     # Appel de la fonction pour créer le plot
     create_plot_effectif_promo(data_promo)
