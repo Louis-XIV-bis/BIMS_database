@@ -306,11 +306,10 @@ function(input, output, session) {
                                                 !is.na(data_filter()$Stage1_pays[i]) &
                                                        !is.na(data_filter()$Stage1_domaine[i])){
                           h4(HTML(paste0("<b>Stage M1 :</b>  ",
-                                         '<a href="',
-                                         data_filter()$Stage1_site_web[i],
-                                         '">',
-                                         data_filter()$Stage1_entreprise[i],
-                                         '</a>, ',
+                                         a(data_filter()$Stage1_entreprise[i],
+                                           href = data_filter()$Stage1_site_web[i],
+                                           target = "_blank"),
+                                         ", ",
                                          data_filter()$Stage1_ville[i],
                                          ", ",
                                          data_filter()$Stage1_pays[i],
@@ -323,11 +322,10 @@ function(input, output, session) {
                                                 !is.na(data_filter()$Alternance_pays[i]) &
                                                        !is.na(data_filter()$Alternance_domaine[i])){
                           h4(HTML(paste0("<b>Alternance :</b>  ",
-                                         '<a href="',
-                                         data_filter()$Alternance_site_web[i],
-                                         '">',
-                                         data_filter()$Alternance_entreprise[i],
-                                         '</a>,',
+                                         a(data_filter()$Alternance_entreprise[i],
+                                           href = data_filter()$Alternance_site_web[i],
+                                           target = "_blank"),
+                                         ", ",
                                          data_filter()$Alternance_ville[i],
                                          ", ",
                                          data_filter()$Alternance_pays[i],
@@ -340,11 +338,10 @@ function(input, output, session) {
                                                 !is.na(data_filter()$Stage2_pays[i]) &
                                                        !is.na(data_filter()$Stage2_domaine[i])){
                           h4(HTML(paste0("<b>Stage M2 :</b>  ",
-                                         '<a href="',
-                                         data_filter()$Stage2_site_web[i],
-                                         '">',
-                                         data_filter()$Stage2_entreprise[i],
-                                         '</a>, ',
+                                         a(data_filter()$Stage2_entreprise[i],
+                                           href = data_filter()$Stage2_site_web[i],
+                                           target = "_blank"),
+                                         ", ",
                                          data_filter()$Stage2_ville[i],
                                          ", ",
                                          data_filter()$Stage2_pays[i],
@@ -357,11 +354,10 @@ function(input, output, session) {
                                                 !is.na(data_filter()$Poursuite_pays[i]) &
                                                        !is.na(data_filter()$Poursuite_domaine[i])){
                           h4(HTML(paste0("<b>Post-master :</b>  ",
-                                         '<a href="',
-                                         data_filter()$Poursuite_site_web[i],
-                                         '">',
-                                         data_filter()$Poursuite_entreprise[i],
-                                         '</a>, ',
+                                         a(data_filter()$Poursuite_entreprise[i],
+                                           href = data_filter()$Poursuite_site_web[i],
+                                           target = "_blank"),
+                                         ", ",
                                          data_filter()$Poursuite_ville[i],
                                          ", ",
                                          data_filter()$Poursuite_pays[i],
@@ -369,7 +365,10 @@ function(input, output, session) {
                                          data_filter()$Poursuite_domaine[i])))
                         },
                         if(!is.na(data_filter()$Linkedin[i])){
-                          h4(HTML(paste0('<a href="',data_filter()$Linkedin[i],'">Linkedin</a>')))
+                          h4(a("Linkedin",
+                               href = data_filter()$Linkedin[i],
+                               target = "_blank"))
+
                         },
                         collapsible = T,
                         collapsed = T
@@ -380,7 +379,7 @@ function(input, output, session) {
     
 
      page_break <- reactive({6})
-     print(length(v()))
+     #print(length(v()))
      page_indices <- shinyThings::pager("pager", length(v()), page_break)
      
       output$myboxes <- renderUI({
