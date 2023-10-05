@@ -379,8 +379,9 @@ function(input, output, session) {
     
 
      page_break <- reactive({6})
-     #print(length(v()))
-     page_indices <- shinyThings::pager("pager", length(v()), page_break)
+     n_items <- reactive(length(v()))
+     print(n_items)
+     page_indices <- shinyThings::pager("pager", n_items, page_break)
      
       output$myboxes <- renderUI({
           return(v()[page_indices()])
